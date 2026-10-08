@@ -21,7 +21,7 @@ button, input { font: inherit; }
 button { color: inherit; }
 button:focus-visible, input:focus-visible { outline: 3px solid #8eb584; outline-offset: 3px; }
 .app-shell { min-height: 100vh; display: flex; flex-direction: column; }
-.topbar { height: 76px; padding: 0 max(5.7vw, 24px); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(41, 61, 44, .08); }
+.topbar { height: 76px; padding: 0 max(5.7vw, 24px); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(41, 61, 44, .08); position: relative; z-index: 2; }
 .brand { border: 0; padding: 0; background: transparent; display: flex; align-items: center; gap: 10px; font: 800 17px var(--serif); letter-spacing: -.8px; cursor: pointer; }
 .brand-mark { width: 30px; height: 30px; border-radius: 11px; display: grid; place-content: center; position: relative; background: #496f4b; color: white; font: 800 15px var(--serif); letter-spacing: -1.5px; }
 .brand-mark span { position: absolute; color: #e5c46d; right: -5px; top: -6px; font-size: 12px; }
@@ -30,6 +30,11 @@ button:focus-visible, input:focus-visible { outline: 3px solid #8eb584; outline-
 .privacy-dot { width: 7px; height: 7px; background: #78a16e; border-radius: 50%; box-shadow: 0 0 0 3px #e6ecdf; }
 .text-button { border: 0; background: transparent; color: #3f6345; font-size: 13px; font-weight: 600; cursor: pointer; }
 .text-button span { padding-left: 3px; }
+.install-help { position: absolute; top: calc(100% + 8px); right: max(5.7vw, 24px); width: min(340px, calc(100vw - 32px)); padding: 18px 38px 16px 18px; border: 1px solid #dfe6d9; border-radius: 12px; background: #fffefa; box-shadow: 0 12px 32px rgba(43, 62, 44, .14); color: #3c493c; font-size: 12px; line-height: 1.55; }
+.install-help strong { font-size: 13px; }
+.install-help p { margin: 6px 0 0; color: #697267; }
+.install-help .install-error { color: #9d4539; }
+.install-help-close { position: absolute; top: 8px; right: 10px; border: 0; padding: 2px 6px; background: transparent; color: #697267; font-size: 20px; line-height: 1; cursor: pointer; }
 main { flex: 1; }
 .start-layout { width: min(1120px, calc(100% - 48px)); margin: 61px auto 66px; display: grid; grid-template-columns: 1fr 1.01fr; align-items: center; gap: clamp(46px, 8vw, 112px); }
 .intro { padding-bottom: 22px; position: relative; }
@@ -167,6 +172,89 @@ h1 em { color: #718d65; font-style: normal; }
 .reset-button { border: 0; background: transparent; color: #a36c61; font-size: 9px; cursor: pointer; white-space: nowrap; }
 .reset-button:hover { text-decoration: underline; }
 
+.app-shell { --season-bg: #f6f5ef; --season-green: #4a724d; --season-soft: #e9efe4; background: var(--season-bg); transition: background-color .45s ease; }
+.app-shell[data-season="spring"] { --season-bg: #f5f6ef; --season-green: #4d754f; --season-soft: #e8f0e3; }
+.app-shell[data-season="summer"] { --season-bg: #f8f5ed; --season-green: #56734a; --season-soft: #eff0df; }
+.app-shell[data-season="autumn"] { --season-bg: #f7f1e9; --season-green: #806348; --season-soft: #f2e8db; }
+.app-shell[data-season="winter"] { --season-bg: #f1f4f2; --season-green: #506c70; --season-soft: #e5edeb; }
+.app-shell .primary-button { background: var(--season-green); }
+.app-shell .primary-button:hover:not(:disabled) { filter: brightness(.91); }
+.network-status { display: inline-flex; align-items: center; gap: 6px; color: #778074; font-size: 10px; white-space: nowrap; }
+.network-status i { width: 6px; height: 6px; border-radius: 50%; background: #80a675; }
+.network-offline i { background: #c09153; }
+.install-link { white-space: nowrap; }
+.storage-warning { max-width: 850px; width: calc(100% - 40px); margin: 10px auto -10px; border: 1px solid #edcfaf; background: #fff7e9; color: #805e36; border-radius: 8px; padding: 9px 12px; font-size: 11px; }
+.pack-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.pack-option { min-height: 52px; display: flex; align-items: center; gap: 8px; text-align: left; border: 1px solid #e7e9e1; background: #fff; padding: 7px 9px; border-radius: 8px; cursor: pointer; transition: border-color .18s, background .18s, transform .18s; }
+.pack-option:hover:not(.pack-disabled) { transform: translateY(-1px); border-color: #a9b9a0; }
+.pack-selected { background: #eff4eb; border-color: #90a987; }
+.pack-disabled { opacity: .45; cursor: not-allowed; }
+.pack-option:last-child:nth-child(odd) { grid-column: 1 / -1; }
+.pack-icon { width: 25px; flex: 0 0 25px; display: grid; place-content: center; color: #6d8b63; font-size: 16px; }
+.pack-option strong, .pack-option small { display: block; }
+.pack-option strong { font-size: 9px; color: #455544; }
+.pack-option small { margin-top: 3px; color: #94998f; font-size: 8px; line-height: 1.35; }
+.model-note { display: flex; justify-content: space-between; gap: 10px; align-items: center; }
+.offline-caption { color: #99978b; font-size: 9px; text-align: right; }
+.favorite-button { border: 0; background: transparent; color: #9a9c91; padding: 4px; display: flex; gap: 4px; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; }
+.favorite-button span { font-size: 9px; }
+.favorite-button.is-favorite { color: #bf7a6e; }
+.reflection-label { display: flex; align-items: center; gap: 8px; text-align: left; margin: 20px 0 7px; color: #54624f; font-size: 11px; font-weight: 700; }
+.reflection-label span { color: #999e94; font-size: 9px; font-weight: 400; }
+.reflection-input { display: block; width: 100%; min-height: 82px; resize: vertical; border: 1px solid #e3e6dc; border-radius: 9px; background: #fffefa; color: #3d493b; padding: 11px 12px; font-size: 11px; line-height: 1.6; }
+.reflection-input::placeholder { color: #a1a69c; }
+.reflection-privacy { margin: 6px 0 0; text-align: left; color: #9a9e93; font-size: 9px; line-height: 1.5; }
+.season-section, .saved-section, .journal-section { margin-top: 29px; }
+.season-picker { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.season-choice { display: flex; justify-content: center; align-items: center; gap: 7px; border: 1px solid #e7e8df; border-radius: 9px; background: #fffefa; padding: 10px 6px; color: #737c6e; font-size: 10px; cursor: pointer; transition: .2s; }
+.season-choice span { color: var(--season-green); font-size: 15px; }
+.season-choice:hover, .season-selected { border-color: #a6b69c; background: var(--season-soft); color: #476045; }
+.badge-icon { width: 39px; height: 39px; flex: 0 0 39px; display: grid; place-content: center; border-radius: 13px; background: #edf1e8; color: #718e64; }
+.badge-icon svg { width: 29px; height: 29px; fill: none; stroke: currentColor; stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round; }
+.badge-icon svg circle:not(.badge-highlight) { fill: #d4ad62; stroke: #fdfbf2; }
+.badge-highlight { fill: #fffefa; stroke: none; }
+.badge-detail { stroke: #f9f7ed; }
+.badge-heart { background: #f7eeea; color: #c17e6c; }
+.badge-sun { background: #f6f1e1; color: #b18a43; }
+.badge-leaf { background: #eaf1e8; color: #6c8b63; }
+.badge-earned .badge-icon { animation: badge-pop .48s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes badge-pop { 0% { transform: scale(.78) rotate(-8deg); } 70% { transform: scale(1.08) rotate(3deg); } 100% { transform: scale(1) rotate(0); } }
+.saved-list, .journal-list { display: flex; flex-direction: column; gap: 8px; }
+.saved-card, .journal-card { display: flex; align-items: center; gap: 12px; border: 1px solid #e8e8df; border-radius: 10px; background: #fffefa; padding: 12px; }
+.saved-card .quest-symbol { width: 36px; height: 36px; flex: 0 0 36px; border-radius: 11px; font-size: 17px; }
+.saved-card > div:nth-child(2) { flex: 1; }
+.saved-card h3 { margin: 0 0 4px; font: 700 11px var(--serif); }
+.saved-card p { margin: 0 0 4px; color: #858b80; font-size: 9px; line-height: 1.5; }
+.saved-skill { color: #69805f; font-size: 8px; font-weight: 700; }
+.remove-favorite { border: 0; background: transparent; color: #c37f72; font-size: 17px; cursor: pointer; padding: 4px; }
+.empty-state { margin: 0; border: 1px dashed #dfe3d9; border-radius: 9px; padding: 16px; color: #979d91; font-size: 10px; text-align: center; }
+.journal-card { align-items: flex-start; }
+.journal-date { min-width: 73px; display: flex; flex-direction: column; gap: 4px; padding-top: 2px; }
+.journal-date strong { color: #52664f; font: 700 10px var(--serif); }
+.journal-date span, .journal-place { color: #959a90; font-size: 8px; }
+.journal-content { flex: 1; }
+.journal-content p { margin: 5px 0 0; color: #70796c; font-size: 9px; line-height: 1.5; }
+.journal-content blockquote { margin: 7px 0 0; color: #718167; font-size: 9px; font-style: italic; line-height: 1.5; }
+.journal-leaf { color: #8ca27c; font-size: 16px; }
+
+@media (max-width: 580px) {
+  .topbar-right { gap: 10px; }
+  .network-status { font-size: 0; gap: 0; }
+  .network-status i { width: 7px; height: 7px; }
+  .install-link { font-size: 9px; }
+  .pack-grid { gap: 6px; }
+  .pack-option { padding: 6px; gap: 4px; }
+  .pack-option strong { font-size: 8px; }
+  .pack-option small { font-size: 7px; }
+  .model-note { align-items: flex-start; flex-direction: column; }
+  .offline-caption { text-align: left; }
+  .season-picker { gap: 5px; }
+  .season-choice { flex-direction: column; gap: 3px; padding: 8px 3px; font-size: 8px; }
+  .journal-card { gap: 8px; padding: 10px 8px; }
+  .journal-date { min-width: 58px; }
+  .journal-date strong { font-size: 9px; }
+}
+
 @media (max-width: 800px) {
   .start-layout { grid-template-columns: 1fr; max-width: 580px; margin-top: 42px; gap: 28px; }
   .intro { padding-bottom: 0; }
@@ -179,6 +267,7 @@ h1 em { color: #718d65; font-style: normal; }
 @media (max-width: 580px) {
   .topbar { height: 64px; padding: 0 18px; }
   .topbar-right { gap: 13px; }
+  .install-help { right: 12px; }
   .privacy-note { font-size: 0; gap: 0; }
   .privacy-dot { width: 8px; height: 8px; }
   .text-button { font-size: 11px; }

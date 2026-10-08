@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { generateQuests, validatePreferences } from "./quests.js";
 import { app } from "./server.js";
 
-const validPreferences = { place: "garden", duration: 30, energy: "medium", social: "gentle", exclude: [] };
+const validPreferences = { place: "garden", duration: 30, energy: "medium", social: "gentle", pack: "mixed", exclude: [] };
 const sampleQuests = [
   { title: "Notice a pattern", description: "Take a moment to notice a pattern in the world nearby.", skill: "Noticing", minutes: 3, difficulty: "Easy" },
   { title: "Say a hello", description: "Offer a hello to someone if it feels right in the moment.", skill: "Connection", minutes: 2, difficulty: "Gentle" },
@@ -18,6 +18,7 @@ test("validates the outing settings and rejects malformed values", () => {
   assert.deepEqual(validatePreferences(validPreferences), { value: validPreferences });
   assert.equal(validatePreferences({ ...validPreferences, duration: 5 }).error, "Time must be between 10 and 60 minutes.");
   assert.equal(validatePreferences({ ...validPreferences, place: "unknown" }).error, "Choose a valid place type.");
+  assert.equal(validatePreferences({ ...validPreferences, pack: "unknown" }).error, "Choose a valid quest pack.");
   assert.ok(validatePreferences(null).error);
 });
 
@@ -38,6 +39,7 @@ test("generates quests with Ollama using outing settings and fast inference opti
   assert.ok(request.messages[1].content.includes('"place":"garden"'));
   assert.ok(request.messages[1].content.includes('"duration":30'));
   assert.ok(request.messages[1].content.includes('"social":"gentle"'));
+  assert.ok(request.messages[1].content.includes('"pack":"mixed"'));
 });
 
 test("reports generation failures instead of returning fixed quests", async () => {
@@ -82,6 +84,28 @@ test("rejects quests that violate solo comfort, safety, exclusions, or outing ti
     }),
     /exceed the available time/,
   );
+});
+
+test("rejects model output that ignores a selected skill pack", async () => {
+  await assert.rejects(
+    generateQuests({ ...validPreferences, pack: "noticing" }, {
+      fetchImpl: async () => ollamaResponse(sampleQuests),
+    }),
+    /ignored the selected quest pack/,
+  );
+});
+
+test("generates a connection-only set for the connection pack", async () => {
+  const connectionQuests = [
+    { title: "Say a hello", description: "Offer a simple hello if it feels comfortable to you.", skill: "Connection", minutes: 2, difficulty: "Gentle" },
+    { title: "Share a kind word", description: "Offer a sincere kind word if the moment feels welcome.", skill: "Connection", minutes: 2, difficulty: "Gentle" },
+    { title: "Say a small thank-you", description: "Thank someone for something they did if it comes up naturally.", skill: "Connection", minutes: 2, difficulty: "Easy" },
+  ];
+  const result = await generateQuests({ ...validPreferences, pack: "connection" }, {
+    fetchImpl: async () => ollamaResponse(connectionQuests),
+  });
+  assert.equal(result.mode, "ollama");
+  assert.ok(result.quests.every((quest) => quest.skill === "Connection"));
 });
 
 test("quest endpoint rejects invalid preferences with a readable response", async (t) => {

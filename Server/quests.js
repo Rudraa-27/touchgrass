@@ -2,22 +2,24 @@ const SKILLS = ["Noticing", "Connection", "Playfulness", "Movement"];
 const PLACE_TYPES = ["garden", "market", "neighborhood", "other"];
 const ENERGY_LEVELS = ["low", "medium", "high"];
 const SOCIAL_LEVELS = ["solo", "gentle", "open"];
+const QUEST_PACKS = ["mixed", "noticing", "connection", "playfulness", "movement"];
 
 export function validatePreferences(input) {
   if (!input || typeof input !== "object" || Array.isArray(input)) {
     return { error: "Please send your outing preferences." };
   }
-  const { place, duration, energy, social, exclude = [] } = input;
+  const { place, duration, energy, social, pack = "mixed", exclude = [] } = input;
   if (!PLACE_TYPES.includes(place)) return { error: "Choose a valid place type." };
   if (!Number.isInteger(duration) || duration < 10 || duration > 60) {
     return { error: "Time must be between 10 and 60 minutes." };
   }
   if (!ENERGY_LEVELS.includes(energy)) return { error: "Choose a valid energy level." };
   if (!SOCIAL_LEVELS.includes(social)) return { error: "Choose a valid social comfort level." };
+  if (!QUEST_PACKS.includes(pack)) return { error: "Choose a valid quest pack." };
   if (!Array.isArray(exclude) || exclude.length > 30 || exclude.some((item) => typeof item !== "string" || item.length > 120)) {
     return { error: "Excluded quest titles must be a list of short strings." };
   }
-  return { value: { place, duration, energy, social, exclude } };
+  return { value: { place, duration, energy, social, pack, exclude } };
 }
 
 function questId(title) {
@@ -77,7 +79,7 @@ export async function generateQuests(preferences, {
       messages: [
         {
           role: "system",
-          content: `Generate exactly 3 original, safe, optional outdoor quests as JSON: {"quests":[{"title":"...","description":"...","skill":"Noticing|Connection|Playfulness|Movement","minutes":3,"difficulty":"Easy|Gentle|A little brave"}]}. Make every quest concrete and specific to the place, available time, energy, and social comfort. Keep descriptions under 18 words. The three quest durations together must fit within the available time. Do not use excluded titles or generic repeated templates. Never require approaching, following, watching, or imitating people; touching animals or plants; photographing people; spending money; entering private property; sharing personal details; or using a phone while moving. Make social quests optional and omit them for solo outings. Avoid dangerous, humiliating, competitive, or judgmental tasks. Return JSON only, with no reasoning, markdown, or extra keys.`,
+          content: `Generate exactly 3 original, safe, optional outdoor quests as JSON: {"quests":[{"title":"...","description":"...","skill":"Noticing|Connection|Playfulness|Movement","minutes":3,"difficulty":"Easy|Gentle|A little brave"}]}. Make every quest concrete and specific to the place, available time, energy, social comfort, and selected quest pack. Prefer the pack's skill when one is selected; mixed means a variety. Keep descriptions under 18 words. The three quest durations together must fit within the available time. Do not use excluded titles or generic repeated templates. Never require approaching, following, watching, or imitating people; touching animals or plants; photographing people; spending money; entering private property; sharing personal details; or using a phone while moving. Make social quests optional and omit them for solo outings. Avoid dangerous, humiliating, competitive, or judgmental tasks. Return JSON only, with no reasoning, markdown, or extra keys.`,
         },
         { role: "user", content: JSON.stringify(preferences) },
       ],
@@ -102,6 +104,18 @@ export async function generateQuests(preferences, {
   }
   if (preferences.social === "solo" && quests.some((quest) => quest.skill === "Connection")) {
     throw new Error("Model ignored the solo preference.");
+  }
+  if (preferences.pack === "connection" && preferences.social === "solo") {
+    throw new Error("Connection quests cannot be generated for a solo outing.");
+  }
+  if (preferences.pack === "connection" && quests.some((quest) => quest.skill !== "Connection")) {
+    throw new Error("Model ignored the connection quest pack.");
+  }
+  if (preferences.pack !== "mixed" && preferences.pack !== "connection") {
+    const expectedSkill = preferences.pack[0].toUpperCase() + preferences.pack.slice(1);
+    if (quests.some((quest) => quest.skill !== expectedSkill)) {
+      throw new Error("Model ignored the selected quest pack.");
+    }
   }
   return { quests, mode: "ollama" };
 }

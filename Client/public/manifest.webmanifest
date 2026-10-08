@@ -1,0 +1,26 @@
+{
+  "id": "/",
+  "name": "TouchGrass — a little outside time",
+  "short_name": "TouchGrass",
+  "description": "Gentle little quests for noticing more of the world outside.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f6f5ef",
+  "theme_color": "#f6f5ef",
+  "icons": [
+    {
+      "src": "/icons/touchgrass-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/touchgrass-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
